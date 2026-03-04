@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { WordFrequency } from "@/data/lyrics-data";
 
 interface WordCloudProps {
@@ -11,6 +11,12 @@ interface WordCloudProps {
 
 const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 确保只在客户端渲染
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // 生成颜色
   const getWordColor = (index: number) => {
@@ -36,7 +42,7 @@ const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord 
   };
 
   useEffect(() => {
-    if (!containerRef.current || words.length === 0) return;
+    if (!isMounted || !containerRef.current || words.length === 0) return;
 
     const container = containerRef.current;
     container.innerHTML = "";
@@ -114,7 +120,15 @@ const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord 
         attempts++;
       }
     });
-  }, [words, selectedWord, onWordClick]);
+  }, [words, selectedWord, onWordClick, isMounted]);
+
+  if (!isMounted) {
+    return (
+      <div className="relative w-full h-full overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 rounded-lg flex items-center justify-center">
+        <div className="text-muted-foreground">加载中...</div>
+      </div>
+    );
+  }
 
   return (
     <div
