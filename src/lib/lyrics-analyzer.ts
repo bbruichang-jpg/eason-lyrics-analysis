@@ -1,0 +1,180 @@
+import { Song, Album, WordFrequency, LyricTrace, TraceItem, AnalysisResult } from "@/data/lyrics-data";
+
+// 中文分词和停用词过滤
+const STOP_WORDS = new Set([
+  "的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都", "一",
+  "一个", "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有",
+  "看", "好", "自己", "这", "那", "些", "个", "来", "他", "她", "它", "我们",
+  "你们", "他们", "她们", "它们", "把", "被", "让", "从", "到", "为", "对",
+  "给", "向", "往", "等", "啊", "呀", "呢", "吧", "么", "吗", "啦", "喔",
+  "哦", "嗯", "哈", "呵", "嗨", "嘿", "哟", "呜", "嘻", "吱", "哎", "唉",
+  "之", "乎", "者", "也", "而", "且", "或", "与", "及", "若", "如", "但",
+  "然", "则", "因", "为", "所以", "因此", "于是", "然而", "不过", "只是",
+  "已经", "正在", "将要", "可以", "能够", "应该", "必须", "需要", "想要",
+  "终于", "渐渐", "慢慢", "突然", "忽然", "其实", "原来", "还是", "到底",
+  "只是", "只要", "只有", "不管", "无论", "即使", "虽然", "但是", "可是",
+  "于是", "接着", "然后", "最后", "开始", "结束", "完成", "进行", "继续",
+  "停止", "暂停", "继续", "重新", "再次", "已经", "从未", "总是", "经常",
+  "有时", "偶尔", "常常", "每天", "每年", "每月", "每周", "每次", "每个",
+  "各位", "大家", "有人", "没人", "一切", "所有", "全部", "整个", "整个",
+  "因为", "所以", "如果", "那么", "既然", "就", "才", "就", "都", "也",
+  "还", "又", "再", "更", "最", "太", "更", "越", "比较", "这样", "那样",
+  "怎样", "什么样", "什么样", "什么", "哪儿", "哪里", "怎样", "怎么",
+]);
+
+// 简单的中文分词函数（按字符分词，过滤停用词和单字）
+function segmentText(text: string): string[] {
+  // 移除标点符号和特殊字符
+  const cleanedText = text.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, " ");
+  const words: string[] = [];
+
+  // 简单的双字和三字词提取
+  for (let i = 0; i < cleanedText.length - 1; i++) {
+    // 提取双字词
+    const twoCharWord = cleanedText.slice(i, i + 2);
+    if (twoCharWord.length === 2 && !STOP_WORDS.has(twoCharWord)) {
+      words.push(twoCharWord);
+    }
+
+    // 提取三字词
+    if (i < cleanedText.length - 2) {
+      const threeCharWord = cleanedText.slice(i, i + 3);
+      if (threeCharWord.length === 3 && !STOP_WORDS.has(threeCharWord)) {
+        words.push(threeCharWord);
+      }
+    }
+  }
+
+  return words;
+}
+
+// 分析歌词，返回词频统计
+export function analyzeLyrics(
+  songs: Song[],
+  albums: Album[],
+  selectedAlbumId: string | null,
+  selectedSongId: string | null
+): AnalysisResult {
+  // 根据筛选条件过滤歌曲
+  let filteredSongs = songs;
+
+  if (selectedSongId) {
+    filteredSongs = songs.filter((song) => song.id === selectedSongId);
+  } else if (selectedAlbumId) {
+    filteredSongs = songs.filter((song) => song.albumId === selectedAlbumId);
+  }
+
+  // 统计词频
+  const wordMap = new Map<string, WordFrequency>();
+
+  filteredSongs.forEach((song) => {
+    const words = segmentText(song.lyrics);
+
+    words.forEach((word) => {
+      const normalizedWord = word.toLowerCase();
+
+      if (!wordMap.has(normalizedWord)) {
+        wordMap.set(normalizedWord, {
+          word: normalizedWord,
+          count: 0,
+          songs: [],
+          albums: [],
+        });
+      }
+
+      const freq = wordMap.get(normalizedWord)!;
+      freq.count += 1;
+
+      // 记录歌曲和专辑
+      if (!freq.songs.includes(song.id)) {
+        freq.songs.push(song.id);
+      }
+
+      const album = albums.find((a) => a.id === song.albumId);
+      if (album && !freq.albums.includes(album.id)) {
+        freq.albums.push(album.id);
+      }
+    });
+  });
+
+  // 转换为数组并按频率排序
+  const wordFrequencies = Array.from(wordMap.values())
+    .filter((wf) => wf.count >= 2) // 只显示出现至少2次的词
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 100); // 取前100个高频词
+
+  // 计算统计数据
+  let totalWords = 0;
+  let uniqueWords = new Set<string>();
+
+  filteredSongs.forEach((song) => {
+    const words = segmentText(song.lyrics);
+    totalWords += words.length;
+    words.forEach((word) => uniqueWords.add(word.toLowerCase()));
+  });
+
+  return {
+    totalWords,
+    uniqueWords: uniqueWords.size,
+    songCount: filteredSongs.length,
+    wordFrequencies,
+  };
+}
+
+// 溯源某个词的使用情况
+export function traceWord(
+  word: string,
+  songs: Song[],
+  albums: Album[]
+): LyricTrace {
+  const traces: TraceItem[] = [];
+  const targetWord = word.toLowerCase();
+
+  songs.forEach((song) => {
+    const album = albums.find((a) => a.id === song.albumId);
+    if (!album) return;
+
+    // 查找包含该词的歌词片段
+    const lyrics = song.lyrics;
+    const lines = lyrics.split("\n");
+
+    lines.forEach((line) => {
+      const words = segmentText(line);
+      const hasWord = words.some((w) => w.toLowerCase() === targetWord);
+
+      if (hasWord) {
+        traces.push({
+          albumId: album.id,
+          albumName: album.name,
+          songId: song.id,
+          songName: song.name,
+          lyricSnippet: line.trim(),
+        });
+      }
+    });
+  });
+
+  // 统计数据
+  const songIds = new Set(traces.map((t) => t.songId));
+  const albumIds = new Set(traces.map((t) => t.albumId));
+
+  return {
+    word,
+    totalCount: traces.length,
+    songCount: songIds.size,
+    albumCount: albumIds.size,
+    traces,
+  };
+}
+
+// 获取专辑封面（这里使用占位图）
+export function getAlbumCover(albumId: string): string {
+  // 使用 gradient 作为专辑封面占位
+  const gradients: Record<string, string> = {
+    u87: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    "shang-ban-quan": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    "te-ji": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+  };
+
+  return gradients[albumId] || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+}
