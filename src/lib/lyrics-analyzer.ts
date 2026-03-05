@@ -167,9 +167,26 @@ export function traceWord(
   };
 }
 
-// 根据专辑ID生成唯一的渐变色
-export function getAlbumCover(albumId: string): string {
-  // 使用专辑ID生成一个确定性的颜色
+// 根据专辑ID生成唯一的渐变色（作为后备）
+export function getAlbumCover(albumId: string, albumName: string): string {
+  // 优先尝试查找真实的专辑封面图片
+  // 支持的图片格式
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+  for (const ext of imageExtensions) {
+    // 尝试使用专辑名作为文件名
+    // 替换特殊字符以创建有效的文件名
+    const safeFileName = albumName
+      .replace(/[\/\\:*?"<>|]/g, '') // 移除非法字符
+      .replace(/\s+/g, '_'); // 替换空格为下划线
+
+    const imagePath = `/albums/${safeFileName}.${ext}`;
+
+    // 返回图片路径（前端会尝试加载，如果失败则使用渐变）
+    return imagePath;
+  }
+
+  // 如果没有找到图片，使用专辑ID生成渐变色作为后备
   const hash = albumId.split('').reduce((acc, char) => {
     return char.charCodeAt(0) + ((acc << 5) - acc);
   }, 0);
@@ -179,5 +196,17 @@ export function getAlbumCover(albumId: string): string {
   const hue2 = (hue1 + 180) % 360;
 
   // 使用 HSL 生成渐变色
+  return `linear-gradient(135deg, hsl(${hue1}, 70%, 50%) 0%, hsl(${hue2}, 70%, 60%) 100%)`;
+}
+
+// 生成渐变色作为后备方案
+export function getGradientColor(albumId: string): string {
+  const hash = albumId.split('').reduce((acc, char) => {
+    return char.charCodeAt(0) + ((acc << 5) - acc);
+  }, 0);
+
+  const hue1 = Math.abs(hash % 360);
+  const hue2 = (hue1 + 180) % 360;
+
   return `linear-gradient(135deg, hsl(${hue1}, 70%, 50%) 0%, hsl(${hue2}, 70%, 60%) 100%)`;
 }

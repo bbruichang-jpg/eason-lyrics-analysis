@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { albums, songs, Song, Album, WordFrequency, LyricTrace } from "@/data/lyrics-data";
-import { analyzeLyrics, traceWord, getAlbumCover } from "@/lib/lyrics-analyzer";
+import { analyzeLyrics, traceWord, getAlbumCover, getGradientColor } from "@/lib/lyrics-analyzer";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -166,13 +166,25 @@ export default function Home() {
                 <CardContent className="space-y-4">
                   {/* 专辑封面 */}
                   {currentAlbum && selectedAlbum !== "all" && (
-                    <div
-                      className="aspect-square rounded-lg shadow-lg flex items-center justify-center text-white text-2xl font-bold"
-                      style={{
-                        background: getAlbumCover(currentAlbum.id),
-                      }}
-                    >
-                      {currentAlbum.name}
+                    <div className="aspect-square rounded-lg shadow-lg overflow-hidden relative">
+                      <img
+                        src={getAlbumCover(currentAlbum.id, currentAlbum.name)}
+                        alt={currentAlbum.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // 如果图片加载失败，使用渐变色
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.style.background = getGradientColor(currentAlbum.id);
+                            const text = document.createElement('div');
+                            text.className = 'absolute inset-0 flex items-center justify-center text-white text-2xl font-bold';
+                            text.textContent = currentAlbum.name;
+                            parent.appendChild(text);
+                          }
+                        }}
+                      />
                     </div>
                   )}
 
@@ -339,12 +351,22 @@ export default function Home() {
                     className="w-36 cursor-pointer hover:shadow-lg transition-shadow hover:scale-105"
                     onClick={() => setSelectedAlbum(album.id)}
                   >
-                    <div
-                      className="aspect-square rounded-t-lg"
-                      style={{
-                        background: getAlbumCover(album.id),
-                      }}
-                    />
+                    <div className="aspect-square rounded-t-lg overflow-hidden relative bg-gradient-to-br from-purple-500 to-pink-500">
+                      <img
+                        src={getAlbumCover(album.id, album.name)}
+                        alt={album.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // 如果图片加载失败，显示渐变色背景
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.style.background = getGradientColor(album.id);
+                          }
+                        }}
+                      />
+                    </div>
                     <CardContent className="p-3">
                       <p className="text-xs font-medium text-center line-clamp-1">
                         {album.name}
