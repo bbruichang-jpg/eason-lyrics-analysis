@@ -100,11 +100,11 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-muted-foreground">专辑:</label>
                 <Select value={selectedAlbum} onValueChange={setSelectedAlbum}>
-                  <SelectTrigger className="w-[200px]">
+                  <SelectTrigger className="w-[250px]">
                     <SelectValue placeholder="选择专辑" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部专辑</SelectItem>
+                    <SelectItem value="all">全部专辑 ({albums.length}张)</SelectItem>
                     {albums.map((album) => (
                       <SelectItem key={album.id} value={album.id}>
                         {album.name} ({album.year})
@@ -117,11 +117,11 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-muted-foreground">歌曲:</label>
                 <Select value={selectedSong} onValueChange={setSelectedSong}>
-                  <SelectTrigger className="w-[200px]">
+                  <SelectTrigger className="w-[250px]">
                     <SelectValue placeholder="选择歌曲" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部歌曲</SelectItem>
+                    <SelectItem value="all">全部歌曲 ({availableSongs.length}首)</SelectItem>
                     {availableSongs.map((song) => (
                       <SelectItem key={song.id} value={song.id}>
                         {song.name}
@@ -327,11 +327,16 @@ export default function Home() {
               <p className="text-muted-foreground mb-6">
                 选择专辑或歌曲，点击"开始分析"查看词频统计和溯源信息
               </p>
-              <div className="flex justify-center gap-4 flex-wrap">
-                {albums.map((album) => (
+              <div className="mb-6">
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  共收录 {albums.length} 张专辑，{songs.length} 首歌曲
+                </Badge>
+              </div>
+              <div className="flex justify-center gap-4 flex-wrap max-w-4xl mx-auto">
+                {albums.slice(0, 8).map((album) => (
                   <Card
                     key={album.id}
-                    className="w-40 cursor-pointer hover:shadow-lg transition-shadow"
+                    className="w-36 cursor-pointer hover:shadow-lg transition-shadow hover:scale-105"
                     onClick={() => setSelectedAlbum(album.id)}
                   >
                     <div
@@ -341,7 +346,7 @@ export default function Home() {
                       }}
                     />
                     <CardContent className="p-3">
-                      <p className="text-sm font-medium text-center">
+                      <p className="text-xs font-medium text-center line-clamp-1">
                         {album.name}
                       </p>
                       <p className="text-xs text-muted-foreground text-center">
@@ -351,6 +356,9 @@ export default function Home() {
                   </Card>
                 ))}
               </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                点击专辑卡片快速开始，或使用上方下拉菜单选择更多专辑
+              </p>
             </div>
           </div>
         )}

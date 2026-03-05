@@ -167,14 +167,17 @@ export function traceWord(
   };
 }
 
-// 获取专辑封面（这里使用占位图）
+// 根据专辑ID生成唯一的渐变色
 export function getAlbumCover(albumId: string): string {
-  // 使用 gradient 作为专辑封面占位
-  const gradients: Record<string, string> = {
-    u87: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    "shang-ban-quan": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-    "te-ji": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-  };
+  // 使用专辑ID生成一个确定性的颜色
+  const hash = albumId.split('').reduce((acc, char) => {
+    return char.charCodeAt(0) + ((acc << 5) - acc);
+  }, 0);
 
-  return gradients[albumId] || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+  // 生成两种互补色
+  const hue1 = Math.abs(hash % 360);
+  const hue2 = (hue1 + 180) % 360;
+
+  // 使用 HSL 生成渐变色
+  return `linear-gradient(135deg, hsl(${hue1}, 70%, 50%) 0%, hsl(${hue2}, 70%, 60%) 100%)`;
 }

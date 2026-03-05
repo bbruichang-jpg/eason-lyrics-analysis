@@ -1,358 +1,180 @@
-# projects
+# 陈奕迅歌词分析系统
 
-这是一个基于 [Next.js 16](https://nextjs.org) + [shadcn/ui](https://ui.shadcn.com) 的全栈应用项目，由扣子编程 CLI 创建。
+一个功能强大的歌词数据分析可视化系统，专为陈奕迅的粉丝打造。
 
-## 快速开始
+## 🎯 功能特性
+
+### 1. 核心筛选与触发区
+- **专辑筛选**：支持选择全部专辑或具体专辑（共收录 72 张专辑）
+- **歌曲筛选**：支持选择全部歌曲或具体歌曲（共收录 476 首歌曲）
+- **快速分析**：一键开始词频统计分析
+- **数据刷新**：快速重置分析结果
+
+### 2. 左侧数据概览区
+- **总词数**：显示分析范围内的总词汇数量
+- **UNIQUE 词**：显示不重复的词汇数量
+- **歌曲数**：显示当前分析覆盖的歌曲总量
+- **专辑封面**：根据选择的专辑显示对应的渐变封面
+- **当前筛选信息**：实时显示当前选择的专辑和歌曲
+
+### 3. 中间词云可视化区
+- **词云展示**：以词云形式展示高频词汇
+- **字体大小**：与出现频率正相关
+- **颜色区分**：不同颜色区分不同词汇
+- **交互功能**：点击词云中的词汇可查看详细信息
+- **选中效果**：选中的词汇会有高亮显示
+
+### 4. 右侧溯源统计区
+- **词汇统计**：显示选中词汇的出现次数、覆盖歌曲数、专辑数
+- **溯源列表**：按专辑和歌曲列出包含该词的歌词片段
+- **快速定位**：可以快速定位到词汇在作品中的具体语境
+
+### 5. 辅助功能
+- **查看原歌词**：点击"查看歌词"按钮，弹窗显示歌曲的完整歌词
+- **响应式设计**：支持桌面端和移动端访问
+
+## 📊 数据统计
+
+- **专辑数量**：72 张（1996 年至今）
+- **歌曲数量**：476 首
+- **歌词数据**：完整收录所有歌曲歌词
+- **分析能力**：支持词频统计、词汇溯源、可视化展示
+
+## 🛠️ 技术栈
+
+- **框架**: Next.js 16 (App Router)
+- **UI组件**: shadcn/ui
+- **语言**: TypeScript 5
+- **样式**: Tailwind CSS 4
+- **数据处理**: XLSX
+- **词云**: 自定义实现（避免 SSR 问题）
+
+## 🚀 快速开始
+
+### 安装依赖
+```bash
+pnpm install
+```
 
 ### 启动开发服务器
-
 ```bash
-coze dev
+pnpm dev
 ```
 
-启动后，在浏览器中打开 [http://localhost:5000](http://localhost:5000) 查看应用。
+### 访问应用
+打开浏览器访问：http://localhost:5000
 
-开发服务器支持热更新，修改代码后页面会自动刷新。
-
-### 构建生产版本
-
-```bash
-coze build
-```
-
-### 启动生产服务器
-
-```bash
-coze start
-```
-
-## 项目结构
+## 📁 项目结构
 
 ```
-src/
-├── app/                      # Next.js App Router 目录
-│   ├── layout.tsx           # 根布局组件
-│   ├── page.tsx             # 首页
-│   ├── globals.css          # 全局样式（包含 shadcn 主题变量）
-│   └── [route]/             # 其他路由页面
-├── components/              # React 组件目录
-│   └── ui/                  # shadcn/ui 基础组件（优先使用）
-│       ├── button.tsx
-│       ├── card.tsx
-│       └── ...
-├── lib/                     # 工具函数库
-│   └── utils.ts            # cn() 等工具函数
-└── hooks/                   # 自定义 React Hooks（可选）
+.
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── page.tsx           # 主页面
+│   │   └── layout.tsx         # 布局组件
+│   ├── components/             # React 组件
+│   │   ├── ui/               # shadcn/ui 组件
+│   │   └── word-cloud.tsx    # 词云组件
+│   ├── data/                   # 数据文件
+│   │   └── lyrics-data.ts    # 歌词数据
+│   └── lib/                    # 工具库
+│       └── lyrics-analyzer.ts # 歌词分析器
+├── scripts/                    # 脚本文件
+│   ├── parse-excel.ts        # Excel 解析脚本
+│   └── convert-data.ts       # 数据转换脚本
+└── public/                     # 静态资源
 ```
 
-## 核心开发规范
-
-### 1. 组件开发
-
-**优先使用 shadcn/ui 基础组件**
-
-本项目已预装完整的 shadcn/ui 组件库，位于 `src/components/ui/` 目录。开发时应优先使用这些组件作为基础：
-
-```tsx
-// ✅ 推荐：使用 shadcn 基础组件
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-
-export default function MyComponent() {
-  return (
-    <Card>
-      <CardHeader>标题</CardHeader>
-      <CardContent>
-        <Input placeholder="输入内容" />
-        <Button>提交</Button>
-      </CardContent>
-    </Card>
-  );
-}
-```
-
-**可用的 shadcn 组件清单**
+## 📝 使用说明
 
-- 表单：`button`, `input`, `textarea`, `select`, `checkbox`, `radio-group`, `switch`, `slider`
-- 布局：`card`, `separator`, `tabs`, `accordion`, `collapsible`, `scroll-area`
-- 反馈：`alert`, `alert-dialog`, `dialog`, `toast`, `sonner`, `progress`
-- 导航：`dropdown-menu`, `menubar`, `navigation-menu`, `context-menu`
-- 数据展示：`table`, `avatar`, `badge`, `hover-card`, `tooltip`, `popover`
-- 其他：`calendar`, `command`, `carousel`, `resizable`, `sidebar`
+### 基本使用流程
 
-详见 `src/components/ui/` 目录下的具体组件实现。
+1. **选择专辑或歌曲**
+   - 在顶部选择"专辑"下拉菜单，选择要分析的专辑
+   - 或选择"歌曲"下拉菜单，选择要分析的单首歌曲
 
-### 2. 路由开发
+2. **开始分析**
+   - 点击"开始分析"按钮
+   - 系统会自动计算词频统计并生成词云
 
-Next.js 使用文件系统路由，在 `src/app/` 目录下创建文件夹即可添加路由：
+3. **查看词云**
+   - 中间区域会显示词云可视化
+   - 词汇大小代表出现频率
+   - 不同颜色用于区分不同词汇
 
-```bash
-# 创建新路由 /about
-src/app/about/page.tsx
+4. **溯源词汇**
+   - 点击词云中的任意词汇
+   - 右侧会显示该词的详细统计信息
+   - 溯源列表显示包含该词的所有歌词片段
 
-# 创建动态路由 /posts/[id]
-src/app/posts/[id]/page.tsx
+5. **查看完整歌词**
+   - 在溯源列表中点击"查看歌词"按钮
+   - 弹窗会显示歌曲的完整歌词
 
-# 创建路由组（不影响 URL）
-src/app/(marketing)/about/page.tsx
+### 高级功能
 
-# 创建 API 路由
-src/app/api/users/route.ts
-```
+- **对比分析**：选择不同专辑进行对比，观察词汇使用的变化
+- **词汇挖掘**：发现陈奕迅歌曲中的高频词汇和常用意象
+- **情感分析**：通过词频了解不同时期的创作主题
 
-**页面组件示例**
+## 🎨 数据更新
 
-```tsx
-// src/app/about/page.tsx
-import { Button } from '@/components/ui/button';
+### 更新歌词数据
 
-export const metadata = {
-  title: '关于我们',
-  description: '关于页面描述',
-};
-
-export default function AboutPage() {
-  return (
-    <div>
-      <h1>关于我们</h1>
-      <Button>了解更多</Button>
-    </div>
-  );
-}
-```
+如果你有新的歌词数据（Excel 格式），可以按照以下步骤更新：
 
-**动态路由示例**
+1. 将 Excel 文件放到项目根目录，命名为 `songs-data.xlsx`
+2. 确保 Excel 包含以下列：发行时间、专辑名、唱片公司、专辑类型、专辑语言、曲目数量、歌曲、演唱者、歌词
+3. 运行转换脚本：
+   ```bash
+   npx tsx scripts/convert-data.ts
+   ```
+4. 数据会自动更新到 `src/data/lyrics-data.ts`
 
-```tsx
-// src/app/posts/[id]/page.tsx
-export default async function PostPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-
-  return <div>文章 ID: {id}</div>;
-}
-```
-
-**API 路由示例**
-
-```tsx
-// src/app/api/users/route.ts
-import { NextResponse } from 'next/server';
-
-export async function GET() {
-  return NextResponse.json({ users: [] });
-}
-
-export async function POST(request: Request) {
-  const body = await request.json();
-  return NextResponse.json({ success: true });
-}
-```
+### 专辑封面
 
-### 3. 依赖管理
-
-**必须使用 pnpm 管理依赖**
-
-```bash
-# ✅ 安装依赖
-pnpm install
-
-# ✅ 添加新依赖
-pnpm add package-name
-
-# ✅ 添加开发依赖
-pnpm add -D package-name
-
-# ❌ 禁止使用 npm 或 yarn
-# npm install  # 错误！
-# yarn add     # 错误！
-```
-
-项目已配置 `preinstall` 脚本，使用其他包管理器会报错。
-
-### 4. 样式开发
-
-**使用 Tailwind CSS v4**
-
-本项目使用 Tailwind CSS v4 进行样式开发，并已配置 shadcn 主题变量。
-
-```tsx
-// 使用 Tailwind 类名
-<div className="flex items-center gap-4 p-4 rounded-lg bg-background">
-  <Button className="bg-primary text-primary-foreground">
-    主要按钮
-  </Button>
-</div>
-
-// 使用 cn() 工具函数合并类名
-import { cn } from '@/lib/utils';
-
-<div className={cn(
-  "base-class",
-  condition && "conditional-class",
-  className
-)}>
-  内容
-</div>
-```
-
-**主题变量**
-
-主题变量定义在 `src/app/globals.css` 中，支持亮色/暗色模式：
-
-- `--background`, `--foreground`
-- `--primary`, `--primary-foreground`
-- `--secondary`, `--secondary-foreground`
-- `--muted`, `--muted-foreground`
-- `--accent`, `--accent-foreground`
-- `--destructive`, `--destructive-foreground`
-- `--border`, `--input`, `--ring`
+当前系统使用自动生成的渐变色作为专辑封面。如果你有实际的专辑封面图片，可以：
 
-### 5. 表单开发
+1. 将封面图片放到 `public/albums/` 目录
+2. 修改 `getAlbumCover` 函数，返回实际图片路径
 
-推荐使用 `react-hook-form` + `zod` 进行表单开发：
+## 🔧 开发说明
 
-```tsx
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+### 添加新功能
 
-const formSchema = z.object({
-  username: z.string().min(2, '用户名至少 2 个字符'),
-  email: z.string().email('请输入有效的邮箱'),
-});
+- **新的分析维度**：在 `lyrics-analyzer.ts` 中添加新的分析函数
+- **新的可视化**：在 `components/` 目录下创建新的组件
+- **新的数据源**：修改 `data/lyrics-data.ts` 添加新的数据接口
 
-export default function MyForm() {
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: { username: '', email: '' },
-  });
+### 自定义词云
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log(data);
-  };
+词云组件在 `components/word-cloud.tsx` 中，你可以自定义：
+- 颜色方案
+- 字体大小范围
+- 布局算法
+- 交互效果
 
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <Input {...form.register('username')} />
-      <Input {...form.register('email')} />
-      <Button type="submit">提交</Button>
-    </form>
-  );
-}
-```
+## 📝 注意事项
 
-### 6. 数据获取
+- 所有歌词数据仅供学习和研究使用
+- 请遵守版权法律法规
+- 不要将此系统用于商业用途
+- 如有版权问题，请联系作者删除
 
-**服务端组件（推荐）**
+## 🤝 贡献
 
-```tsx
-// src/app/posts/page.tsx
-async function getPosts() {
-  const res = await fetch('https://api.example.com/posts', {
-    cache: 'no-store', // 或 'force-cache'
-  });
-  return res.json();
-}
+欢迎提交 Issue 和 Pull Request！
 
-export default async function PostsPage() {
-  const posts = await getPosts();
+## 📄 许可证
 
-  return (
-    <div>
-      {posts.map(post => (
-        <div key={post.id}>{post.title}</div>
-      ))}
-    </div>
-  );
-}
-```
+MIT License
 
-**客户端组件**
+## 🙏 致谢
 
-```tsx
-'use client';
+- 陈奕迅 - 感谢他的优秀音乐作品
+- Next.js - 优秀的 React 框架
+- shadcn/ui - 美观的 UI 组件库
 
-import { useEffect, useState } from 'react';
+---
 
-export default function ClientComponent() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    fetch('/api/data')
-      .then(res => res.json())
-      .then(setData);
-  }, []);
-
-  return <div>{JSON.stringify(data)}</div>;
-}
-```
-
-## 常见开发场景
-
-### 添加新页面
-
-1. 在 `src/app/` 下创建文件夹和 `page.tsx`
-2. 使用 shadcn 组件构建 UI
-3. 根据需要添加 `layout.tsx` 和 `loading.tsx`
-
-### 创建业务组件
-
-1. 在 `src/components/` 下创建组件文件（非 UI 组件）
-2. 优先组合使用 `src/components/ui/` 中的基础组件
-3. 使用 TypeScript 定义 Props 类型
-
-### 添加全局状态
-
-推荐使用 React Context 或 Zustand：
-
-```tsx
-// src/lib/store.ts
-import { create } from 'zustand';
-
-interface Store {
-  count: number;
-  increment: () => void;
-}
-
-export const useStore = create<Store>((set) => ({
-  count: 0,
-  increment: () => set((state) => ({ count: state.count + 1 })),
-}));
-```
-
-### 集成数据库
-
-推荐使用 Prisma 或 Drizzle ORM，在 `src/lib/db.ts` 中配置。
-
-## 技术栈
-
-- **框架**: Next.js 16.1.1 (App Router)
-- **UI 组件**: shadcn/ui (基于 Radix UI)
-- **样式**: Tailwind CSS v4
-- **表单**: React Hook Form + Zod
-- **图标**: Lucide React
-- **字体**: Geist Sans & Geist Mono
-- **包管理器**: pnpm 9+
-- **TypeScript**: 5.x
-
-## 参考文档
-
-- [Next.js 官方文档](https://nextjs.org/docs)
-- [shadcn/ui 组件文档](https://ui.shadcn.com)
-- [Tailwind CSS 文档](https://tailwindcss.com/docs)
-- [React Hook Form](https://react-hook-form.com)
-
-## 重要提示
-
-1. **必须使用 pnpm** 作为包管理器
-2. **优先使用 shadcn/ui 组件** 而不是从零开发基础组件
-3. **遵循 Next.js App Router 规范**，正确区分服务端/客户端组件
-4. **使用 TypeScript** 进行类型安全开发
-5. **使用 `@/` 路径别名** 导入模块（已配置）
+**享受音乐，享受数据分析！** 🎵
