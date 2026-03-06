@@ -33,12 +33,30 @@ export default function Home() {
   const [traceData, setTraceData] = useState<LyricTrace | null>(null);
   const [selectedSongForLyrics, setSelectedSongForLyrics] = useState<Song | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const albumsPerPage = 12; // 每页显示12张专辑
 
   // 获取可选的歌曲列表
   const availableSongs =
     selectedAlbum === "all"
       ? songs
       : songs.filter((song) => song.albumId === selectedAlbum);
+
+  // 分页计算
+  const totalPages = Math.ceil(albums.length / albumsPerPage);
+  const startIndex = (currentPage - 1) * albumsPerPage;
+  const endIndex = startIndex + albumsPerPage;
+  const currentAlbums = albums.slice(startIndex, endIndex);
+
+  // 上一页
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  // 下一页
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
 
   // 开始分析
   const handleAnalyze = () => {
@@ -344,8 +362,8 @@ export default function Home() {
                   共收录 {albums.length} 张专辑，{songs.length} 首歌曲
                 </Badge>
               </div>
-              <div className="flex justify-center gap-4 flex-wrap max-w-4xl mx-auto">
-                {albums.slice(0, 8).map((album) => (
+              <div className="flex justify-center gap-4 flex-wrap max-w-5xl mx-auto">
+                {currentAlbums.map((album) => (
                   <Card
                     key={album.id}
                     className="w-36 cursor-pointer hover:shadow-lg transition-shadow hover:scale-105"
@@ -378,8 +396,64 @@ export default function Home() {
                   </Card>
                 ))}
               </div>
+
+              {/* 分页控件 */}
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                >
+                  上一页
+                </Button>
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="w-10 h-10"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  下一页
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-center gap-4 mt-4">
+                <p className="text-sm text-muted-foreground">
+                  第 {currentPage} 页 / 共 {totalPages} 页
+                </p>
+                <Badge variant="secondary" className="text-xs">
+                  显示 {startIndex + 1}-{Math.min(endIndex, albums.length)} / 共 {albums.length} 张专辑
+                </Badge>
+              </div>
+
               <p className="text-sm text-muted-foreground mt-4">
-                点击专辑卡片快速开始，或使用上方下拉菜单选择更多专辑
+                点击专辑卡片快速开始，或使用上方下拉菜单选择专辑
               </p>
             </div>
           </div>
