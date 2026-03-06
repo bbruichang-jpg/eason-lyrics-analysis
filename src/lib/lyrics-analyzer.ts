@@ -22,21 +22,35 @@ const STOP_WORDS = new Set([
   "怎样", "什么样", "什么样", "什么", "哪儿", "哪里", "怎样", "怎么",
 ]);
 
-// 简单的中文分词函数（按字符分词，过滤停用词和单字）
-function segmentText(text: string): string[] {
-  // 移除标点符号和特殊字符
-  const cleanedText = text.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, " ");
-  const words: string[] = [];
+// 标点符号集合（用于过滤纯标点符号）
+const PUNCTUATION = new Set([
+  "，", "。", "、", "；", "：", "？", "！", "「", "」", "『", "』", "（", "）",
+  "【", "】", "《", "》", "〈", "〉", "\"", "'", "''", "\"\"", "…", "—", "－",
+  ",", ".", ";", ":", "?", "!", "(", ")", "[", "]", "{", "}", "<", ">", "...",
+]);
 
-  // 简单的双字和三字词提取
+// 判断是否为纯标点符号
+function isPurePunctuation(text: string): boolean {
+  if (text.length === 0) return true;
+  for (const char of text) {
+    if (!PUNCTUATION.has(char)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// 分词函数（备用方案，用于词云等不依赖精确分词的场景）
+// 专业的分词功能已移至 API Route (src/app/api/analyze/route.ts)
+function segmentText(text: string): string[] {
+  // 简单的字符分割
+  const cleanedText = text.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, " ");
+  const words: string[] = [];
   for (let i = 0; i < cleanedText.length - 1; i++) {
-    // 提取双字词
     const twoCharWord = cleanedText.slice(i, i + 2);
     if (twoCharWord.length === 2 && !STOP_WORDS.has(twoCharWord)) {
       words.push(twoCharWord);
     }
-
-    // 提取三字词
     if (i < cleanedText.length - 2) {
       const threeCharWord = cleanedText.slice(i, i + 3);
       if (threeCharWord.length === 3 && !STOP_WORDS.has(threeCharWord)) {
@@ -44,7 +58,6 @@ function segmentText(text: string): string[] {
       }
     }
   }
-
   return words;
 }
 
