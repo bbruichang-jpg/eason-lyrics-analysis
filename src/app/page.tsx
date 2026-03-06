@@ -184,7 +184,7 @@ export default function Home() {
                 <CardContent className="space-y-4">
                   {/* 专辑封面 */}
                   {currentAlbum && selectedAlbum !== "all" && (
-                    <div className="aspect-square rounded-lg shadow-lg overflow-hidden relative">
+                    <div className="aspect-square rounded-lg shadow-lg overflow-hidden relative bg-gradient-to-br from-purple-500 to-pink-500">
                       <img
                         src={getAlbumCover(currentAlbum.id, currentAlbum.name)}
                         alt={currentAlbum.name}
@@ -192,9 +192,13 @@ export default function Home() {
                         onError={(e) => {
                           // 如果图片加载失败，使用渐变色
                           const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
                           const parent = target.parentElement;
                           if (parent) {
+                            // 移除 Tailwind 背景类，避免覆盖内联样式
+                            parent.className = parent.className
+                              .replace(/bg-gradient-to-br\s+from-\w+-\d+\s+to-\w+-\d+/g, '')
+                              .trim();
+                            target.style.display = 'none';
                             parent.style.background = getGradientColor(currentAlbum.id);
                             const text = document.createElement('div');
                             text.className = 'absolute inset-0 flex items-center justify-center text-white text-2xl font-bold';
@@ -377,9 +381,13 @@ export default function Home() {
                         onError={(e) => {
                           // 如果图片加载失败，显示渐变色背景
                           const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
                           const parent = target.parentElement;
                           if (parent) {
+                            // 移除 Tailwind 背景类，避免覆盖内联样式
+                            parent.className = parent.className
+                              .replace(/bg-gradient-to-br\s+from-\w+-\d+\s+to-\w+-\d+/g, '')
+                              .trim();
+                            target.style.display = 'none';
                             parent.style.background = getGradientColor(album.id);
                           }
                         }}
