@@ -167,22 +167,41 @@ export function traceWord(
   };
 }
 
+// 特殊专辑ID映射（用于包含特殊字符的专辑）
+const SPECIAL_ALBUM_MAPPING: Record<string, string> = {
+  'album-134': 'album-134', // Shall We Dance?Shall We Talk!
+  'album-201': 'album-201', // Eason 4 A Change & Hits
+  'album-271': 'album-271', // What's Going On..?
+  'album-367': 'album-367', // ?
+  'album-382': 'album-382', // ...3mm
+  'album-406': 'album-406', // 《米 · 闪》(Rice&Shine)
+  'album-436': 'Cmon_in',   // C'mon in~
+  'album-447': 'LOVE',      // L.O.V.E.
+  'album-465': 'I_Want',    // I Want...
+  'album-467': 'CHIN_UP',   // CHIN UP!
+};
+
 // 根据专辑ID生成唯一的渐变色（作为后备）
 export function getAlbumCover(albumId: string, albumName: string): string {
-  // 优先尝试查找真实的专辑封面图片
   // 支持的图片格式
   const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
+  // 检查是否是特殊专辑
+  if (SPECIAL_ALBUM_MAPPING[albumId]) {
+    for (const ext of imageExtensions) {
+      const imagePath = `/albums/${SPECIAL_ALBUM_MAPPING[albumId]}.${ext}`;
+      return imagePath;
+    }
+  }
+
+  // 对于普通专辑，尝试使用专辑名作为文件名
   for (const ext of imageExtensions) {
-    // 尝试使用专辑名作为文件名
     // 替换特殊字符以创建有效的文件名
     const safeFileName = albumName
       .replace(/[\/\\:*?"<>|]/g, '') // 移除非法字符
       .replace(/\s+/g, '_'); // 替换空格为下划线
 
     const imagePath = `/albums/${safeFileName}.${ext}`;
-
-    // 返回图片路径（前端会尝试加载，如果失败则使用渐变）
     return imagePath;
   }
 

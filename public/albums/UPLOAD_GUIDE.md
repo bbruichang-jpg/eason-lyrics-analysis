@@ -22,13 +22,13 @@
 
 ### 2001-2005 年
 13. Eason 18首选 (2001) → `Eason_18首选.jpg`
-14. Shall We Dance?Shall We Talk! (2001) → `Shall_We_DanceShall_We_Talk!.jpg`
+14. Shall We Dance?Shall We Talk! (2001) → `album-134.jpg` （特殊字符专辑）
 15. 反正是我 (2001) → `反正是我.jpg`
 16. The Easy Ride (2001) → `The_Easy_Ride.jpg`
 17. Special thanks to (2002) → `Special_thanks_to.jpg`
 18. 五星级的家 (2002) → `五星级的家.jpg`
 19. The Line-up (2002) → `The_Line-up.jpg`
-20. Eason 4 A Change & Hits (2002) → `Eason_4_A_Change_&_Hits.jpg`
+20. Eason 4 A Change & Hits (2002) → `album-201.jpg` （特殊字符专辑）
 21. 黑白灰 (2003) → `黑白灰.jpg`
 22. Live For Today (2003) → `Live_For_Today.jpg`
 23. 七 (2003) → `七.jpg`
@@ -39,8 +39,8 @@
 28. 怎么样 (2005) → `怎么样.jpg`
 
 ### 2006-2010 年
-29. What's Going On..? (2006) → `What's_Going_On...jpg`
-30. Sound & Sight (2006) → `Sound_&_Sight.jpg`
+29. What's Going On..? (2006) → `album-271.jpg`
+30. Sound & Sight (2006) → `Sound_and_Sight.jpg`
 31. 认了吧 (2007) → `认了吧.jpg`
 32. Listen To Eason Chan (2007) → `Listen_To_Eason_Chan.jpg`
 33. 不想放手 (2008) → `不想放手.jpg`
@@ -57,7 +57,7 @@
 42. ? (2011) → `album-367.jpg` （特殊字符专辑）
 43. 人人爱 (2012) → `人人爱.jpg`
 44. 相信自己无限极 (2012) → `相信自己无限极.jpg`
-45. ...3mm (2012) → `...3mm.jpg`
+45. ...3mm (2012) → `album-382.jpg` （特殊字符专辑）
 46. 梦想天空分外蓝 (2012) → `梦想天空分外蓝.jpg`
 47. 蓝色频闪灯 (2012) → `蓝色频闪灯.jpg`
 48. 稳稳的幸福 (2013) → `稳稳的幸福.jpg`
@@ -65,7 +65,7 @@
 50. 光辉岁月 (2013) → `光辉岁月.jpg`
 51. The Key (2013) → `The_Key.jpg`
 52. 斗战神 (2014) → `斗战神.jpg`
-53. 《米 · 闪》(Rice&Shine) (2014) → `《米_·_闪》(Rice&Shine).jpg`
+53. 《米 · 闪》(Rice&Shine) (2014) → `album-406.jpg` （特殊字符专辑）
 54. 暴风雨 (2015) → `暴风雨.jpg`
 55. 准备中 (2015) → `准备中.jpg`
 56. 恐龙进化论 (2015) → `恐龙进化论.jpg`
@@ -77,15 +77,15 @@
 60. I Do (2016) → `I_Do.jpg`
 61. 四季 (2016) → `四季.jpg`
 62. 让我留在你身边 (2016) → `让我留在你身边.jpg`
-63. C'mon in~ (2017) → `C'mon_in~.jpg`
+63. C'mon in~ (2017) → `Cmon_in.jpg`
 64. 我们 (2018) → `我们.jpg`
-65. L.O.V.E. (2018) → `L.O.V.E..jpg`
+65. L.O.V.E. (2018) → `LOVE.jpg`
 66. 相信你的人 (2019) → `相信你的人.jpg`
 67. Fight as ONE (2020) → `Fight_as_ONE.jpg`
 68. 不期而遇的夏天 (2021) → `不期而遇的夏天.jpg`
-69. I Want... (2021) → `I_Want....jpg`
+69. I Want... (2021) → `I_Want.jpg` （特殊字符专辑）
 70. 孤勇者 (2021) → `孤勇者.jpg`
-71. CHIN UP! (2023) → `CHIN_UP!.jpg`
+71. CHIN UP! (2023) → `CHIN_UP.jpg` （特殊字符专辑）
 72. 这样很好 (2024) → `这样很好.jpg`
 
 ## 🚀 上传步骤
