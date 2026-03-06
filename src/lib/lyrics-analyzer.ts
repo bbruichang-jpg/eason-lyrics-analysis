@@ -198,6 +198,7 @@ export function getAlbumCover(albumId: string, albumName: string): string {
   for (const ext of imageExtensions) {
     // 替换特殊字符以创建有效的文件名
     const safeFileName = albumName
+      .replace(/&/g, 'and') // 将 & 替换为 and
       .replace(/[\/\\:*?"<>|]/g, '') // 移除非法字符
       .replace(/\s+/g, '_'); // 替换空格为下划线
 
