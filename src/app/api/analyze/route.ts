@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // 动态导入数据
 let songs: any[] = [];
 let albums: any[] = [];
+let jieba: any = null;
 
 function loadData() {
   if (songs.length === 0) {
@@ -12,16 +13,25 @@ function loadData() {
   }
 }
 
-// 动态导入 segment 库（仅在服务器端使用）
-let segment: any = null;
-
-function getSegment() {
-  if (!segment) {
-    const Segment = require('segment');
-    segment = new Segment();
-    segment.useDefault();
+// 动态加载 jieba（延迟加载以避免初始化错误）
+function getJieba() {
+  if (!jieba) {
+    try {
+      // 使用 eval 避免 Next.js 的模块转换
+      // @ts-ignore
+      const jsJieba = eval('require("js-jieba")');
+      // @ts-ignore
+      const jiebaData = eval('require("jieba-zh-cn")');
+      const { JiebaDict, HMMModel, UserDict, IDF, StopWords } = jiebaData;
+      
+      // jsJieba 本身就是 createJieba 函数
+      jieba = jsJieba(JiebaDict, HMMModel, UserDict, IDF, StopWords);
+    } catch (error) {
+      console.error('Failed to initialize jieba:', error);
+      throw error;
+    }
   }
-  return segment;
+  return jieba;
 }
 
 // 标点符号集合
@@ -31,7 +41,7 @@ const PUNCTUATION = new Set([
   ",", ".", ";", ":", "?", "!", "(", ")", "[", "]", "{", "}", "<", ">", "...",
 ]);
 
-// 停用词集合
+// 停用词集合（常见的无意义词汇）
 const STOP_WORDS = new Set([
   "的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都", "一",
   "一个", "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有",
@@ -64,48 +74,71 @@ function isPurePunctuation(text: string): boolean {
   return true;
 }
 
-// 分词函数
+// 判断是否为纯空白字符
+function isPureWhitespace(text: string): boolean {
+  return /^\s+$/.test(text);
+}
+
+// 判断是否包含空格
+function hasWhitespace(text: string): boolean {
+  return /\s/.test(text);
+}
+
+// 判断是否为纯数字
+function isPureNumber(text: string): boolean {
+  return /^\d+$/.test(text);
+}
+
+// 判断是否以特殊符号开头
+function startsWithSpecialChar(text: string): boolean {
+  return /^[^\u4e00-\u9fa5a-zA-Z]/.test(text);
+}
+
+// 使用 jieba 进行专业中文分词
 function segmentText(text: string): string[] {
   const words: string[] = [];
 
   try {
-    const segmentInstance = getSegment();
-    const rawWords = segmentInstance.doSegment(text);
+    const jiebaInstance = getJieba();
+    // 使用 jieba 进行分词（启用 HMM 模式以获得更好的分词效果）
+    const rawWords = jiebaInstance.cut(text, true);
 
-    rawWords.forEach((wordObj: any) => {
-      const trimmedWord = wordObj.w.trim();
+    rawWords.forEach((word: string) => {
+      const trimmedWord = word.trim();
 
-      // 跳过空字符串
+      // 智能过滤：
+      
+      // 1. 跳过空字符串
       if (trimmedWord.length === 0) return;
 
-      // 跳过只包含空白字符的词（包括各种 Unicode 空白字符）
-      if (!trimmedWord || /^\s+$/.test(trimmedWord)) return;
+      // 2. 跳过纯空白字符
+      if (isPureWhitespace(trimmedWord)) return;
 
-      // 跳过只包含特殊空白字符的词
-      if (/^[\u00A0\u2000-\u200B\u3000]+$/.test(trimmedWord)) return;
-
-      // 过滤长度小于2的词
+      // 3. 过滤长度小于 2 的词（单字通常无意义）
       if (trimmedWord.length < 2) return;
 
-      // 过滤纯标点符号
+      // 4. 过滤纯标点符号
       if (isPurePunctuation(trimmedWord)) return;
 
-      // 过滤停用词
+      // 5. 过滤停用词
       if (STOP_WORDS.has(trimmedWord)) return;
 
-      // 过滤纯数字
-      if (/^\d+$/.test(trimmedWord)) return;
+      // 6. 过滤纯数字
+      if (isPureNumber(trimmedWord)) return;
 
-      // 过滤特殊符号开头的词
-      if (/^[^\u4e00-\u9fa5a-zA-Z]/.test(trimmedWord)) return;
+      // 7. 过滤特殊符号开头的词
+      if (startsWithSpecialChar(trimmedWord)) return;
 
-      // 确保词不包含任何空格（过滤 " 我"、"心 " 等）
-      if (/\s/.test(trimmedWord)) return;
+      // 8. 过滤包含空格的词（避免 " 我"、"心 " 等）
+      if (hasWhitespace(trimmedWord)) return;
+
+      // 9. 只保留中文、英文单词
+      if (!/^[\u4e00-\u9fa5a-zA-Z]+$/.test(trimmedWord)) return;
 
       words.push(trimmedWord);
     });
   } catch (error) {
-    console.error('分词失败，使用备用方案:', error);
+    console.error('Jieba 分词失败:', error);
     // 备用方案：简单的字符分割
     const cleanedText = text.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, " ");
     for (let i = 0; i < cleanedText.length - 1; i++) {
@@ -146,18 +179,9 @@ export async function POST(request: NextRequest) {
 
     filteredSongs.forEach((song) => {
       const words = segmentText(song.lyrics);
-      if (words.length > 0) {
-        console.log(`Song ${song.id}: ${words.length} words`);
-      }
 
       words.forEach((word) => {
         const normalizedWord = word.toLowerCase();
-
-        // 跳过空白词
-        if (/^\s+$/.test(normalizedWord)) return;
-
-        // 跳过包含空格的词（过滤 " 我"、"心 " 等）
-        if (/\s/.test(normalizedWord)) return;
 
         if (!wordMap.has(normalizedWord)) {
           wordMap.set(normalizedWord, {
