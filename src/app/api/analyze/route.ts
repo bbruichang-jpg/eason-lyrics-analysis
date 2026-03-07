@@ -43,6 +43,7 @@ const PUNCTUATION = new Set([
 
 // 停用词集合（常见的无意义词汇）
 const STOP_WORDS = new Set([
+  // 助词、代词、连词
   "的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都", "一",
   "一个", "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有",
   "看", "好", "自己", "这", "那", "些", "个", "来", "他", "她", "它", "我们",
@@ -61,6 +62,17 @@ const STOP_WORDS = new Set([
   "因为", "所以", "如果", "那么", "既然", "就", "才", "就", "都", "也",
   "还", "又", "再", "更", "最", "太", "更", "越", "比较", "这样", "那样",
   "怎样", "什么样", "什么样", "什么", "哪儿", "哪里", "怎样", "怎么",
+  
+  // 陈奕迅歌词中常见的无意义词
+  "这个", "那个", "如何", "不到", "不能", "觉得", "一次", "留下", "多少",
+  "现在", "得到", "我要", "还要", "我要", "你说", "我说", "他说", "她说",
+  "像是", "像是", "那种", "这种", "那种", "怎样", "怎样", "以为", "以为",
+  "一直在", "一直在", "开始", "开始", "一点", "一点", "一直", "一直",
+  "这样的", "那样的", "怎样的", "怎样的", "什么", "怎么", "为什么",
+  "可以", "可能", "应该", "应该", "不是", "是不是", "是不是", "有没有",
+  
+  // 常见副歌填充词
+  "oh", "yeah", "baby", "darling", "honey", "la", "da", "ba", "na", "na",
 ]);
 
 // 判断是否为纯标点符号
@@ -87,6 +99,11 @@ function hasWhitespace(text: string): boolean {
 // 判断是否为纯数字
 function isPureNumber(text: string): boolean {
   return /^\d+$/.test(text);
+}
+
+// 判断是否为纯英文单词（歌词中的英文通常是填充词，非核心情感表达）
+function isPureEnglish(text: string): boolean {
+  return /^[a-zA-Z]+$/.test(text);
 }
 
 // 判断是否以特殊符号开头
@@ -132,18 +149,23 @@ function segmentText(text: string): string[] {
       // 8. 过滤包含空格的词（避免 " 我"、"心 " 等）
       if (hasWhitespace(trimmedWord)) return;
 
-      // 9. 只保留中文、英文单词
-      if (!/^[\u4e00-\u9fa5a-zA-Z]+$/.test(trimmedWord)) return;
+      // 9. 过滤纯英文单词（歌词中的英文通常是填充词）
+      if (isPureEnglish(trimmedWord)) return;
+
+      // 10. 只保留中文词汇
+      if (!/^[\u4e00-\u9fa5]+$/.test(trimmedWord)) return;
 
       words.push(trimmedWord);
     });
   } catch (error) {
     console.error('Jieba 分词失败:', error);
-    // 备用方案：简单的字符分割
-    const cleanedText = text.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, " ");
+    // 备用方案：简单的字符分割（只保留中文）
+    const cleanedText = text.replace(/[^\u4e00-\u9fa5]/g, " ");
     for (let i = 0; i < cleanedText.length - 1; i++) {
       const twoCharWord = cleanedText.slice(i, i + 2);
-      if (twoCharWord.length === 2 && !STOP_WORDS.has(twoCharWord)) {
+      if (twoCharWord.length === 2 && 
+          !STOP_WORDS.has(twoCharWord) && 
+          /^[\u4e00-\u9fa5]{2}$/.test(twoCharWord)) {
         words.push(twoCharWord);
       }
     }
