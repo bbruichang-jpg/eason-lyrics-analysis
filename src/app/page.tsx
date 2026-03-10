@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { albums, songs, Song, Album, WordFrequency, LyricTrace } from "@/data/lyrics-data";
+import { globalWordFrequencies, albumWordFrequencies } from "@/data/word-frequency";
 import { analyzeLyrics, traceWord, getAlbumCover, getGradientColor } from "@/lib/lyrics-analyzer";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,17 +69,53 @@ export default function Home() {
   const handleAnalyze = () => {
     setIsAnalyzing(true);
 
-    // 模拟分析延迟
     setTimeout(() => {
-      const albumId = selectedAlbum === "all" ? null : selectedAlbum;
-      const songId = selectedSong === "all" ? null : selectedSong;
+      if (selectedAlbum === "all") {
+        // 使用预计算的全局词频数据
+        const wordFrequencies: WordFrequency[] = globalWordFrequencies.map((wf, index) => ({
+          word: wf.word,
+          count: wf.count,
+          songs: [],
+          albums: [],
+          contexts: [],
+        }));
 
-      const result = analyzeLyrics(songs, albums, albumId, songId);
-      setAnalysisData(result);
+        setAnalysisData({
+          totalWords: globalWordFrequencies.reduce((sum, wf) => sum + wf.count, 0),
+          uniqueWords: globalWordFrequencies.length,
+          songCount: songs.length,
+          wordFrequencies,
+        });
+      } else {
+        // 查找专辑预计算数据
+        const albumData = albumWordFrequencies.find(a => a.albumId === selectedAlbum);
+        
+        if (albumData) {
+          const wordFrequencies: WordFrequency[] = albumData.topWords.map((wf) => ({
+            word: wf.word,
+            count: wf.count,
+            songs: [],
+            albums: [],
+            contexts: [],
+          }));
+
+          setAnalysisData({
+            totalWords: albumData.topWords.reduce((sum, wf) => sum + wf.count, 0),
+            uniqueWords: albumData.topWords.length,
+            songCount: songs.filter(s => s.albumId === selectedAlbum).length,
+            wordFrequencies,
+          });
+        } else {
+          // 回退到实时分析
+          const result = analyzeLyrics(songs, albums, selectedAlbum, selectedSong === "all" ? null : selectedSong);
+          setAnalysisData(result);
+        }
+      }
+
       setSelectedWord(null);
       setTraceData(null);
       setIsAnalyzing(false);
-    }, 500);
+    }, 300);
   };
 
   // 刷新数据
