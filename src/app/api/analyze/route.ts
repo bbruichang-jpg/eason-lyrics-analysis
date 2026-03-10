@@ -13,7 +13,7 @@ function loadData() {
   }
 }
 
-// 动态加载 jieba（延迟加载以避免初始化错误）
+// 动态加载 jieba
 function getJieba() {
   if (!jieba) {
     try {
@@ -24,7 +24,6 @@ function getJieba() {
       const jiebaData = eval('require("jieba-zh-cn")');
       const { JiebaDict, HMMModel, UserDict, IDF, StopWords } = jiebaData;
       
-      // jsJieba 本身就是 createJieba 函数
       jieba = jsJieba(JiebaDict, HMMModel, UserDict, IDF, StopWords);
     } catch (error) {
       console.error('Failed to initialize jieba:', error);
@@ -34,14 +33,7 @@ function getJieba() {
   return jieba;
 }
 
-// 标点符号集合
-const PUNCTUATION = new Set([
-  "，", "。", "、", "；", "：", "？", "！", "「", "」", "『", "』", "（", "）",
-  "【", "】", "《", "》", "〈", "〉", "\"", "'", "''", "\"\"", "…", "—", "－",
-  ",", ".", ";", ":", "?", "!", "(", ")", "[", "]", "{", "}", "<", ">", "...",
-]);
-
-// 停用词集合（常见的无意义词汇）
+// 停用词集合
 const STOP_WORDS = new Set([
   // 助词、代词、连词
   "的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都", "一",
@@ -63,7 +55,7 @@ const STOP_WORDS = new Set([
   "还", "又", "再", "更", "最", "太", "更", "越", "比较", "这样", "那样",
   "怎样", "什么样", "什么样", "什么", "哪儿", "哪里", "怎样", "怎么",
   
-  // 否定词类（词云中不应出现）
+  // 否定词类
   "不要", "不想", "不会", "不必", "不再", "没法", "不可", "不知", "不敢", 
   "不怕", "不够", "不能", "不可", "不是", "没", "无", "非",
   
@@ -95,42 +87,41 @@ const STOP_WORDS = new Set([
   "可以", "应该", "是不是", "有没有",
   "一种", "一样", "就是", "一句", "这里", "那里",
   
-  // 常见副歌填充词
+  // 英文填充词
   "oh", "yeah", "baby", "darling", "honey", "la", "da", "ba", "na", "na",
 ]);
 
-// 判断是否为纯标点符号
+// 标点符号集合
+const PUNCTUATION = new Set([
+  "，", "。", "、", "；", "：", "？", "！", "「", "」", "『", "』", "（", "）",
+  "【", "】", "《", "》", "〈", "〉", "\"", "'", "''", "\"\"", "…", "—", "－",
+  ",", ".", ";", ":", "?", "!", "(", ")", "[", "]", "{", "}", "<", ">", "...",
+]);
+
 function isPurePunctuation(text: string): boolean {
   if (text.length === 0) return true;
   for (const char of text) {
-    if (!PUNCTUATION.has(char)) {
-      return false;
-    }
+    if (!PUNCTUATION.has(char)) return false;
   }
   return true;
 }
 
-// 判断是否为纯空白字符
 function isPureWhitespace(text: string): boolean {
   return /^\s+$/.test(text);
 }
 
-// 判断是否包含空格
 function hasWhitespace(text: string): boolean {
   return /\s/.test(text);
 }
 
-// 判断是否为纯数字
 function isPureNumber(text: string): boolean {
   return /^\d+$/.test(text);
 }
 
-// 判断是否为纯英文单词（歌词中的英文通常是填充词，非核心情感表达）
 function isPureEnglish(text: string): boolean {
   return /^[a-zA-Z]+$/.test(text);
 }
 
-// 判断是否以特殊符号开头
 function startsWithSpecialChar(text: string): boolean {
   return /^[^\u4e00-\u9fa5a-zA-Z]/.test(text);
 }
@@ -141,49 +132,27 @@ function segmentText(text: string): string[] {
 
   try {
     const jiebaInstance = getJieba();
-    // 使用 jieba 进行分词（启用 HMM 模式以获得更好的分词效果）
     const rawWords = jiebaInstance.cut(text, true);
 
     rawWords.forEach((word: string) => {
       const trimmedWord = word.trim();
 
-      // 智能过滤：
-      
-      // 1. 跳过空字符串
+      // 智能过滤
       if (trimmedWord.length === 0) return;
-
-      // 2. 跳过纯空白字符
       if (isPureWhitespace(trimmedWord)) return;
-
-      // 3. 过滤长度小于 2 的词（单字通常无意义）
       if (trimmedWord.length < 2) return;
-
-      // 4. 过滤纯标点符号
       if (isPurePunctuation(trimmedWord)) return;
-
-      // 5. 过滤停用词
       if (STOP_WORDS.has(trimmedWord)) return;
-
-      // 6. 过滤纯数字
       if (isPureNumber(trimmedWord)) return;
-
-      // 7. 过滤特殊符号开头的词
       if (startsWithSpecialChar(trimmedWord)) return;
-
-      // 8. 过滤包含空格的词（避免 " 我"、"心 " 等）
       if (hasWhitespace(trimmedWord)) return;
-
-      // 9. 过滤纯英文单词（歌词中的英文通常是填充词）
       if (isPureEnglish(trimmedWord)) return;
-
-      // 10. 只保留中文词汇
       if (!/^[\u4e00-\u9fa5]+$/.test(trimmedWord)) return;
 
       words.push(trimmedWord);
     });
   } catch (error) {
     console.error('Jieba 分词失败:', error);
-    // 备用方案：简单的字符分割（只保留中文）
     const cleanedText = text.replace(/[^\u4e00-\u9fa5]/g, " ");
     for (let i = 0; i < cleanedText.length - 1; i++) {
       const twoCharWord = cleanedText.slice(i, i + 2);
@@ -198,16 +167,32 @@ function segmentText(text: string): string[] {
   return words;
 }
 
+// 从歌词中提取包含特定词的句子
+function extractContextLines(lyrics: string, word: string): string[] {
+  const lines = lyrics.split('\n');
+  const contextLines: string[] = [];
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (trimmedLine.includes(word) && trimmedLine.length > 0) {
+      // 清理句子中的多余空白
+      const cleanedLine = trimmedLine.replace(/\s+/g, ' ').trim();
+      if (cleanedLine.length > 0 && cleanedLine.length < 100) {
+        contextLines.push(cleanedLine);
+      }
+    }
+  }
+  
+  // 最多返回5个上下文句子
+  return contextLines.slice(0, 5);
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // 加载数据
     loadData();
-    console.log(`Loaded: ${songs.length} songs, ${albums.length} albums`);
 
     const body = await request.json();
     const { selectedAlbumId, selectedSongId } = body;
-
-    console.log(`API called: selectedAlbumId=${selectedAlbumId}, selectedSongId=${selectedSongId}`);
 
     // 根据筛选条件过滤歌曲
     let filteredSongs = songs;
@@ -218,44 +203,70 @@ export async function POST(request: NextRequest) {
       filteredSongs = songs.filter((song) => song.albumId === selectedAlbumId);
     }
 
-    console.log(`Filtered songs: ${filteredSongs.length}`);
-
-    // 统计词频
-    const wordMap = new Map<string, any>();
+    // 统计词频并收集上下文
+    const wordMap = new Map<string, {
+      word: string;
+      count: number;
+      songs: string[];
+      albums: string[];
+      contexts: Array<{
+        songId: string;
+        songName: string;
+        albumId: string;
+        albumName: string;
+        line: string;
+      }>;
+    }>();
 
     filteredSongs.forEach((song) => {
       const words = segmentText(song.lyrics);
+      const album = albums.find((a) => a.id === song.albumId);
 
       words.forEach((word) => {
-        const normalizedWord = word.toLowerCase();
-
-        if (!wordMap.has(normalizedWord)) {
-          wordMap.set(normalizedWord, {
-            word: normalizedWord,
+        if (!wordMap.has(word)) {
+          wordMap.set(word, {
+            word,
             count: 0,
             songs: [],
             albums: [],
+            contexts: [],
           });
         }
 
-        const freq = wordMap.get(normalizedWord)!;
+        const freq = wordMap.get(word)!;
         freq.count += 1;
 
-        // 记录歌曲和专辑
+        // 记录歌曲
         if (!freq.songs.includes(song.id)) {
           freq.songs.push(song.id);
         }
 
-        const album = albums.find((a) => a.id === song.albumId);
+        // 记录专辑
         if (album && !freq.albums.includes(album.id)) {
           freq.albums.push(album.id);
+        }
+
+        // 收集上下文（每个词最多10个上下文）
+        if (freq.contexts.length < 10) {
+          const contextLines = extractContextLines(song.lyrics, word);
+          for (const line of contextLines) {
+            if (freq.contexts.length >= 10) break;
+            // 避免重复的句子
+            if (!freq.contexts.some(c => c.line === line)) {
+              freq.contexts.push({
+                songId: song.id,
+                songName: song.name || song.title || '',
+                albumId: song.albumId,
+                albumName: album?.name || '',
+                line,
+              });
+            }
+          }
         }
       });
     });
 
-    console.log(`Total unique words: ${wordMap.size}`);
-
-    // 转换为数组并按频率排序
+    // 转换为数组并按频率排序，取前100个
     const wordFrequencies = Array.from(wordMap.values())
       .filter((wf) => wf.count >= 2)
       .sort((a, b) => b.count - a.count)
@@ -263,12 +274,12 @@ export async function POST(request: NextRequest) {
 
     // 计算统计数据
     let totalWords = 0;
-    let uniqueWords = new Set<string>();
+    const uniqueWords = new Set<string>();
 
     filteredSongs.forEach((song) => {
       const words = segmentText(song.lyrics);
       totalWords += words.length;
-      words.forEach((word) => uniqueWords.add(word.toLowerCase()));
+      words.forEach((word) => uniqueWords.add(word));
     });
 
     const result = {
@@ -277,8 +288,6 @@ export async function POST(request: NextRequest) {
       songCount: filteredSongs.length,
       wordFrequencies,
     };
-
-    console.log(`Result: totalWords=${result.totalWords}, uniqueWords=${result.uniqueWords}, wordFrequencies=${result.wordFrequencies.length}`);
 
     return NextResponse.json(result);
   } catch (error) {

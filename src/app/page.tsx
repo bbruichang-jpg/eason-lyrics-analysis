@@ -88,8 +88,28 @@ export default function Home() {
   // 选择词云中的词汇
   const handleWordClick = (word: WordFrequency) => {
     setSelectedWord(word);
-    const trace = traceWord(word.word, songs, albums);
-    setTraceData(trace);
+    
+    // 使用 API 返回的上下文数据，如果没有则回退到客户端计算
+    if (word.contexts && word.contexts.length > 0) {
+      const trace: LyricTrace = {
+        word: word.word,
+        totalCount: word.count,
+        songCount: word.songs.length,
+        albumCount: word.albums.length,
+        traces: word.contexts.map(ctx => ({
+          albumId: ctx.albumId,
+          albumName: ctx.albumName,
+          songId: ctx.songId,
+          songName: ctx.songName,
+          lyricSnippet: ctx.line,
+        })),
+      };
+      setTraceData(trace);
+    } else {
+      // 回退到客户端计算
+      const trace = traceWord(word.word, songs, albums);
+      setTraceData(trace);
+    }
   };
 
   // 查看歌曲歌词

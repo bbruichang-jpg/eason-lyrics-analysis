@@ -4012,6 +4012,13 @@ export interface WordFrequency {
   count: number;
   songs: string[]; // 包含该词的歌曲ID列表
   albums: string[]; // 包含该词的专辑ID列表
+  contexts?: Array<{
+    songId: string;
+    songName: string;
+    albumId: string;
+    albumName: string;
+    line: string;
+  }>; // 歌词上下文
 }
 
 // 歌词溯源信息接口
