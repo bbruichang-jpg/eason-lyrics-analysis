@@ -87,8 +87,24 @@ const STOP_WORDS = new Set([
   "可以", "应该", "是不是", "有没有",
   "一种", "一样", "就是", "一句", "这里", "那里",
   
-  // 英文填充词
+  // 英文填充词/无意义词
   "oh", "yeah", "baby", "darling", "honey", "la", "da", "ba", "na", "na",
+  
+  // 英文停用词（代词、冠词、介词、连词等）
+  "the", "a", "an", "and", "or", "but", "if", "then", "so", "because",
+  "i", "you", "he", "she", "it", "we", "they", "me", "him", "her", "us", "them",
+  "my", "your", "his", "her", "its", "our", "their",
+  "this", "that", "these", "those",
+  "is", "am", "are", "was", "were", "be", "been", "being",
+  "have", "has", "had", "do", "does", "did",
+  "will", "would", "could", "should", "may", "might", "must",
+  "can", "need", "dare", "ought", "used",
+  "to", "of", "in", "for", "on", "with", "at", "by", "from",
+  "up", "about", "into", "over", "after", "under", "above",
+  "what", "which", "who", "whom", "whose", "where", "when", "why", "how",
+  "all", "each", "every", "both", "few", "more", "most", "other", "some",
+  "such", "no", "not", "only", "same", "than", "too", "very",
+  "just", "now", "here", "there", "also",
 ]);
 
 // 标点符号集合
@@ -118,8 +134,34 @@ function isPureNumber(text: string): boolean {
   return /^\d+$/.test(text);
 }
 
-function isPureEnglish(text: string): boolean {
-  return /^[a-zA-Z]+$/.test(text);
+// 判断是否为无意义的英文碎片
+function isMeaninglessEnglish(text: string): boolean {
+  // 必须是纯英文
+  if (!/^[a-zA-Z]+$/.test(text)) return false;
+  
+  // 无意义的英文填充词列表
+  const meaninglessWords = new Set([
+    // 单字母/双字母碎片
+    'a', 'i', 'u', 'o', 'e',
+    'ba', 'la', 'da', 'na', 'ha', 'oh', 'ye', 'ah', 'eh', 'uh', 'um',
+    // 常见无意义副歌填充词
+    'doo', 'daa', 'laa', 'baa', 'naa', 'woo', 'ooh', 'aah',
+    // 短缩写
+    've', 'll', 're', 't', 's', 'm', 'd',
+  ]);
+  
+  const lowerText = text.toLowerCase();
+  
+  // 如果是已知的无意义词，直接过滤
+  if (meaninglessWords.has(lowerText)) return true;
+  
+  // 长度小于3的英文单词视为无意义碎片
+  if (text.length < 3) return true;
+  
+  // 检查是否是重复字母组成的无意义词（如 aaa, bbb）
+  if (lowerText.length >= 2 && /^([a-z])\1+$/.test(lowerText)) return true;
+  
+  return false;
 }
 
 function startsWithSpecialChar(text: string): boolean {
@@ -146,14 +188,20 @@ function segmentText(text: string): string[] {
       if (isPureNumber(trimmedWord)) return;
       if (startsWithSpecialChar(trimmedWord)) return;
       if (hasWhitespace(trimmedWord)) return;
-      if (isPureEnglish(trimmedWord)) return;
-      if (!/^[\u4e00-\u9fa5]+$/.test(trimmedWord)) return;
+      
+      // 过滤无意义的英文碎片，保留有意义的完整英文单词
+      if (isMeaninglessEnglish(trimmedWord)) return;
+      
+      // 只保留中文词汇或完整的英文单词
+      const isChinese = /^[\u4e00-\u9fa5]+$/.test(trimmedWord);
+      const isEnglish = /^[a-zA-Z]{3,}$/.test(trimmedWord);
+      if (!isChinese && !isEnglish) return;
 
       words.push(trimmedWord);
     });
   } catch (error) {
     console.error('Jieba 分词失败:', error);
-    const cleanedText = text.replace(/[^\u4e00-\u9fa5]/g, " ");
+    const cleanedText = text.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, " ");
     for (let i = 0; i < cleanedText.length - 1; i++) {
       const twoCharWord = cleanedText.slice(i, i + 2);
       if (twoCharWord.length === 2 && 
