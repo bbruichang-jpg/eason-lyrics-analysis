@@ -80,11 +80,26 @@ const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord 
     const maxCount = Math.max(...counts);
     const minCount = Math.min(...counts);
     
-    // 取前100个词
-    const topWords = words.slice(0, 100);
+    // 取前100个词并去重（确保不会有重复词）
+    const seenWords = new Set<string>();
+    const uniqueWords: WordFrequency[] = [];
+    
+    for (const w of words) {
+      // 跳过单字
+      if (w.word.length < 2) continue;
+      
+      // 跳过已存在的词
+      if (seenWords.has(w.word)) continue;
+      
+      seenWords.add(w.word);
+      uniqueWords.push(w);
+      
+      // 最多100个词
+      if (uniqueWords.length >= 100) break;
+    }
     
     // 转换为 wordcloud 需要的格式 [word, weight]
-    const list = topWords.map(w => {
+    const list = uniqueWords.map(w => {
       const normalizedWeight = minCount === maxCount 
         ? 50 
         : 15 + ((w.count - minCount) / (maxCount - minCount)) * 85;

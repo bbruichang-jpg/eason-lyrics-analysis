@@ -179,23 +179,40 @@ function segmentText(text: string): string[] {
     rawWords.forEach((word: string) => {
       const trimmedWord = word.trim();
 
-      // 智能过滤
+      // ===== 严格过滤规则 =====
+      // 1. 空白和长度检查
       if (trimmedWord.length === 0) return;
       if (isPureWhitespace(trimmedWord)) return;
+      
+      // 2. 单字过滤（中文单字无意义）
       if (trimmedWord.length < 2) return;
+      
+      // 3. 标点符号过滤
       if (isPurePunctuation(trimmedWord)) return;
+      
+      // 4. 停用词过滤
       if (STOP_WORDS.has(trimmedWord)) return;
+      if (STOP_WORDS.has(trimmedWord.toLowerCase())) return; // 英文不区分大小写
+      
+      // 5. 数字过滤
       if (isPureNumber(trimmedWord)) return;
+      
+      // 6. 特殊字符开头的词
       if (startsWithSpecialChar(trimmedWord)) return;
+      
+      // 7. 包含空白字符的词
       if (hasWhitespace(trimmedWord)) return;
       
-      // 过滤无意义的英文碎片，保留有意义的完整英文单词
-      if (isMeaninglessEnglish(trimmedWord)) return;
-      
-      // 只保留中文词汇或完整的英文单词
+      // 8. 类型检查：只保留中文词汇或完整的英文单词
       const isChinese = /^[\u4e00-\u9fa5]+$/.test(trimmedWord);
-      const isEnglish = /^[a-zA-Z]{3,}$/.test(trimmedWord);
+      const isEnglish = /^[a-zA-Z]+$/.test(trimmedWord);
       if (!isChinese && !isEnglish) return;
+      
+      // 9. 英文词汇过滤：过滤无意义碎片
+      if (isEnglish && isMeaninglessEnglish(trimmedWord)) return;
+      
+      // 10. 中文词汇：过滤单字（再次确认）
+      if (isChinese && trimmedWord.length < 2) return;
 
       words.push(trimmedWord);
     });
