@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { albums, songs, Song, Album, WordFrequency, LyricTrace } from "@/data/lyrics-data";
 import { analyzeLyrics, traceWord, getAlbumCover, getGradientColor } from "@/lib/lyrics-analyzer";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { RefreshCw, BarChart3, MessageSquare, Database } from "lucide-react";
 import dynamic from "next/dynamic";
+import { Timeline } from "@/components/timeline";
 
 // 动态导入词云组件以避免 SSR 问题
 const WordCloud = dynamic(() => import("@/components/word-cloud"), { ssr: false });
@@ -36,6 +37,11 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const albumsPerPage = 12; // 每页显示12张专辑
 
+  // 按年份排序的专辑列表
+  const sortedAlbums = useMemo(() => {
+    return [...albums].sort((a, b) => a.year - b.year);
+  }, []);
+
   // 获取可选的歌曲列表
   const availableSongs =
     selectedAlbum === "all"
@@ -43,10 +49,10 @@ export default function Home() {
       : songs.filter((song) => song.albumId === selectedAlbum);
 
   // 分页计算
-  const totalPages = Math.ceil(albums.length / albumsPerPage);
+  const totalPages = Math.ceil(sortedAlbums.length / albumsPerPage);
   const startIndex = (currentPage - 1) * albumsPerPage;
   const endIndex = startIndex + albumsPerPage;
-  const currentAlbums = albums.slice(startIndex, endIndex);
+  const currentAlbums = sortedAlbums.slice(startIndex, endIndex);
 
   // 上一页
   const handlePreviousPage = () => {
@@ -134,6 +140,19 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               陈奕迅歌词分析系统
             </h1>
+            
+            {/* 时间轴 */}
+            <div className="bg-white/80 dark:bg-slate-800/50 rounded-lg p-2 shadow-sm">
+              <Timeline
+                albums={albums}
+                selectedAlbum={selectedAlbum === "all" ? null : selectedAlbum}
+                onAlbumSelect={(albumId) => {
+                  setSelectedAlbum(albumId);
+                  setSelectedSong("all");
+                }}
+              />
+            </div>
+            
             <div className="flex flex-wrap items-center justify-center gap-4">
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-muted-foreground">专辑:</label>
@@ -143,7 +162,7 @@ export default function Home() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部专辑 ({albums.length}张)</SelectItem>
-                    {albums.map((album) => (
+                    {sortedAlbums.map((album) => (
                       <SelectItem key={album.id} value={album.id}>
                         {album.name} ({album.year})
                       </SelectItem>
@@ -476,7 +495,7 @@ export default function Home() {
                   第 {currentPage} 页 / 共 {totalPages} 页
                 </p>
                 <Badge variant="secondary" className="text-xs">
-                  显示 {startIndex + 1}-{Math.min(endIndex, albums.length)} / 共 {albums.length} 张专辑
+                  显示 {startIndex + 1}-{Math.min(endIndex, sortedAlbums.length)} / 共 {sortedAlbums.length} 张专辑
                 </Badge>
               </div>
 
