@@ -177,4 +177,37 @@ MIT License
 
 ---
 
+## 🚀 部署到线上
+
+### 方式一：Vercel 部署（推荐）
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/eason-lyrics-analysis)
+
+1. 点击上方按钮或访问 [vercel.com](https://vercel.com)
+2. 导入你的 GitHub 仓库
+3. 点击 Deploy，等待部署完成
+4. 获得永久访问地址：`https://你的项目.vercel.app`
+
+### 方式二：GitHub + Vercel 自动部署
+
+```bash
+# 1. 在 GitHub 创建新仓库
+
+# 2. 添加远程仓库
+git remote add origin https://github.com/你的用户名/eason-lyrics-analysis.git
+
+# 3. 推送代码
+git push -u origin main
+
+# 4. 在 Vercel 导入 GitHub 项目
+# 每次 push 会自动触发部署
+```
+
+### 环境要求
+
+- Node.js 18+
+- pnpm 8+
+
+---
+
 **享受音乐，享受数据分析！** 🎵
