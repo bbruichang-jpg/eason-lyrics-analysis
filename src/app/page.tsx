@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { albums, songs, Song, Album, WordFrequency, LyricTrace } from "@/data/lyrics-data";
 import { globalWordFrequencies, albumWordFrequencies } from "@/data/word-frequency";
+import { getAlbumColors, defaultColors } from "@/data/album-colors";
 import { analyzeLyrics, traceWord, getAlbumCover, getGradientColor } from "@/lib/lyrics-analyzer";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +49,14 @@ export default function Home() {
     selectedAlbum === "all"
       ? songs
       : songs.filter((song) => song.albumId === selectedAlbum);
+
+  // 获取当前专辑的配色方案
+  const currentAlbumColors = useMemo(() => {
+    if (selectedAlbum === "all") {
+      return defaultColors; // 全局分析使用默认彩虹色
+    }
+    return getAlbumColors(selectedAlbum);
+  }, [selectedAlbum]);
 
   // 分页计算
   const totalPages = Math.ceil(sortedAlbums.length / albumsPerPage);
@@ -342,6 +351,7 @@ export default function Home() {
                       words={analysisData.wordFrequencies}
                       onWordClick={handleWordClick}
                       selectedWord={selectedWord?.word || null}
+                      albumColors={currentAlbumColors}
                     />
                   </div>
                 </CardContent>

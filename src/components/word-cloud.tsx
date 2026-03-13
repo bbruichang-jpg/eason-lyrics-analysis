@@ -2,14 +2,16 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { WordFrequency } from "@/data/lyrics-data";
+import { defaultColors } from "@/data/album-colors";
 
 interface WordCloudProps {
   words: WordFrequency[];
   onWordClick: (word: WordFrequency) => void;
   selectedWord: string | null;
+  albumColors?: string[]; // 专辑配色方案
 }
 
-const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord }) => {
+const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord, albumColors }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -17,6 +19,9 @@ const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord 
   const [isReady, setIsReady] = useState(false);
   const wordMapRef = useRef<Map<string, WordFrequency>>(new Map());
   const wordcloudRef = useRef<any>(null);
+
+  // 使用专辑配色或默认配色
+  const colors = albumColors && albumColors.length > 0 ? albumColors : defaultColors;
 
   useEffect(() => {
     setIsMounted(true);
@@ -46,15 +51,6 @@ const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord 
     
     initWordCloud();
   }, [isMounted]);
-
-  // 多彩配色方案
-  const colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
-    '#F8C471', '#82E0AA', '#85C1E9', '#BB8FCE', '#F1948A',
-    '#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6',
-    '#1ABC9C', '#E67E22', '#16A085', '#27AE60', '#2980B9',
-  ];
 
   // 生成词云
   useEffect(() => {
