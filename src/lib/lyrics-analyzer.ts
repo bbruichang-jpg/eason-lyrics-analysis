@@ -152,8 +152,18 @@ export function traceWord(
     const lines = lyrics.split("\n");
 
     lines.forEach((line) => {
-      const words = segmentText(line);
-      const hasWord = words.some((w) => w.toLowerCase() === targetWord);
+      // 对于单字词，直接检查是否包含该字
+      // 对于多字词，使用分词匹配
+      let hasWord = false;
+      
+      if (targetWord.length === 1) {
+        // 单字词：直接检查是否包含
+        hasWord = line.includes(targetWord);
+      } else {
+        // 多字词：使用分词匹配
+        const words = segmentText(line);
+        hasWord = words.some((w) => w.toLowerCase() === targetWord);
+      }
 
       if (hasWord) {
         traces.push({
