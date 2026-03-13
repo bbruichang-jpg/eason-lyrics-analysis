@@ -85,9 +85,6 @@ const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord 
     const uniqueWords: WordFrequency[] = [];
     
     for (const w of words) {
-      // 跳过单字
-      if (w.word.length < 2) continue;
-      
       // 跳过已存在的词
       if (seenWords.has(w.word)) continue;
       
