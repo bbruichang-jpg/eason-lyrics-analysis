@@ -16,9 +16,10 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, BarChart3, MessageSquare, Database } from "lucide-react";
+import { RefreshCw, BarChart3, MessageSquare, Database, Settings, ChevronLeft, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Timeline } from "@/components/timeline";
+import { WordCloudSettingsPanel, defaultSettings, WordCloudSettings } from "@/components/word-cloud-settings";
 
 // 动态导入词云组件以避免 SSR 问题
 const WordCloud = dynamic(() => import("@/components/word-cloud"), { ssr: false });
@@ -33,6 +34,8 @@ export default function Home() {
     wordFrequencies: WordFrequency[];
   } | null>(null);
   const [selectedWord, setSelectedWord] = useState<WordFrequency | null>(null);
+  const [cloudSettings, setCloudSettings] = useState<WordCloudSettings>(defaultSettings);
+  const [showSettings, setShowSettings] = useState(false);
   const [traceData, setTraceData] = useState<LyricTrace | null>(null);
   const [selectedSongForLyrics, setSelectedSongForLyrics] = useState<Song | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -339,20 +342,53 @@ export default function Home() {
             <section className="lg:col-span-5">
               <Card className="h-full">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    词云可视化
-                  </CardTitle>
-                  <CardDescription>高频词汇展示（点击词汇查看详情）</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5" />
+                        词云可视化
+                      </CardTitle>
+                      <CardDescription>高频词汇展示（点击词汇查看详情）</CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowSettings(!showSettings)}
+                      className="flex items-center gap-1"
+                    >
+                      <Settings className="h-4 w-4" />
+                      自定义
+                      {showSettings ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[500px]">
-                    <WordCloud
-                      words={analysisData.wordFrequencies}
-                      onWordClick={handleWordClick}
-                      selectedWord={selectedWord?.word || null}
-                      albumColors={currentAlbumColors}
-                    />
+                  <div className="flex gap-4">
+                    {/* 词云区域 */}
+                    <div className={`transition-all duration-300 ${showSettings ? 'w-2/3' : 'w-full'}`}>
+                      <div className="h-[500px]">
+                        <WordCloud
+                          words={analysisData.wordFrequencies}
+                          onWordClick={handleWordClick}
+                          selectedWord={selectedWord?.word || null}
+                          albumColors={currentAlbumColors}
+                          settings={cloudSettings}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* 设置面板 */}
+                    {showSettings && (
+                      <div className="w-1/3 min-w-[280px] animate-in slide-in-from-right duration-300">
+                        <ScrollArea className="h-[500px] pr-2">
+                          <WordCloudSettingsPanel
+                            settings={cloudSettings}
+                            onSettingsChange={setCloudSettings}
+                            albumColors={currentAlbumColors}
+                          />
+                        </ScrollArea>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

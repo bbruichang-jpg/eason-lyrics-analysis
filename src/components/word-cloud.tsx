@@ -3,15 +3,23 @@
 import React, { useEffect, useRef, useState } from "react";
 import { WordFrequency } from "@/data/lyrics-data";
 import { defaultColors } from "@/data/album-colors";
+import { WordCloudSettings, colorThemes } from "./word-cloud-settings";
 
 interface WordCloudProps {
   words: WordFrequency[];
   onWordClick: (word: WordFrequency) => void;
   selectedWord: string | null;
-  albumColors?: string[]; // 专辑配色方案
+  albumColors?: string[];
+  settings?: WordCloudSettings;
 }
 
-const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord, albumColors }) => {
+const WordCloud: React.FC<WordCloudProps> = ({ 
+  words, 
+  onWordClick, 
+  selectedWord, 
+  albumColors,
+  settings 
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -20,8 +28,31 @@ const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord,
   const wordMapRef = useRef<Map<string, WordFrequency>>(new Map());
   const wordcloudRef = useRef<any>(null);
 
-  // 使用专辑配色或默认配色
-  const colors = albumColors && albumColors.length > 0 ? albumColors : defaultColors;
+  // 获取当前配色
+  const getColors = (): string[] => {
+    if (settings?.useCustomColors && settings.customColors.length > 0) {
+      return settings.customColors;
+    }
+    if (settings?.colorTheme === 'album' && albumColors && albumColors.length > 0) {
+      return albumColors;
+    }
+    if (settings?.colorTheme && settings.colorTheme !== 'album') {
+      const theme = colorThemes.find(t => t.id === settings.colorTheme);
+      if (theme) return theme.colors;
+    }
+    // 默认使用专辑配色或默认配色
+    return albumColors && albumColors.length > 0 ? albumColors : defaultColors;
+  };
+
+  const colors = getColors();
+
+  // 配置参数
+  const wordCount = settings?.wordCount ?? 80;
+  const minSize = settings?.minSize ?? 15;
+  const maxSize = settings?.maxSize ?? 100;
+  const shape = settings?.shape ?? 0.65;
+  const rotation = settings?.rotation ?? 0.3;
+  const font = settings?.font ?? 'PingFang SC, Microsoft YaHei, Hiragino Sans GB, sans-serif';
 
   useEffect(() => {
     setIsMounted(true);
@@ -76,30 +107,28 @@ const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord,
     const maxCount = Math.max(...counts);
     const minCount = Math.min(...counts);
     
-    // 取前100个词并去重（确保不会有重复词）
+    // 取指定数量的词并去重
     const seenWords = new Set<string>();
     const uniqueWords: WordFrequency[] = [];
     
     for (const w of words) {
-      // 跳过已存在的词
       if (seenWords.has(w.word)) continue;
       
       seenWords.add(w.word);
       uniqueWords.push(w);
       
-      // 最多100个词
-      if (uniqueWords.length >= 100) break;
+      if (uniqueWords.length >= wordCount) break;
     }
     
     // 转换为 wordcloud 需要的格式 [word, weight]
     const list = uniqueWords.map(w => {
       const normalizedWeight = minCount === maxCount 
-        ? 50 
-        : 15 + ((w.count - minCount) / (maxCount - minCount)) * 85;
+        ? (minSize + maxSize) / 2
+        : minSize + ((w.count - minCount) / (maxCount - minCount)) * (maxSize - minSize);
       return [w.word, normalizedWeight] as [string, number];
     });
 
-    // 颜色索引（使用闭包）
+    // 颜色索引
     let colorIndex = 0;
 
     // 生成词云
@@ -109,21 +138,21 @@ const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord,
       weightFactor: (size: number) => {
         return Math.pow(size / 100, 0.75) * Math.min(rect.width, rect.height) / 2.2 * dpr;
       },
-      fontFamily: 'PingFang SC, Microsoft YaHei, Hiragino Sans GB, sans-serif',
+      fontFamily: font,
       fontWeight: '700',
       color: () => {
         const color = colors[colorIndex % colors.length];
         colorIndex++;
         return color;
       },
-      rotateRatio: 0.3,
+      rotateRatio: rotation,
       minRotation: -Math.PI / 3,
       maxRotation: Math.PI / 3,
       backgroundColor: '#ffffff',
       drawOutOfBound: false,
       shrinkToFit: true,
       shuffle: true,
-      ellipticity: 0.65,
+      ellipticity: shape,
       
       // 悬停效果
       hover: (item: [string, number] | undefined, dimension: any, event: MouseEvent) => {
@@ -187,7 +216,7 @@ const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord,
         }
       }
     };
-  }, [words, isMounted, isReady, onWordClick, colors]);
+  }, [words, isMounted, isReady, onWordClick, colors, wordCount, minSize, maxSize, shape, rotation, font]);
 
   if (!isMounted) {
     return (
@@ -198,31 +227,13 @@ const WordCloud: React.FC<WordCloudProps> = ({ words, onWordClick, selectedWord,
   }
 
   return (
-    <div 
-      ref={containerRef} 
-      className="relative w-full h-full bg-white rounded-lg overflow-hidden"
-      style={{ minHeight: '400px' }}
-    >
-      <canvas 
-        ref={canvasRef}
-        className="block"
-      />
-      
-      {/* Tooltip */}
+    <div className="relative w-full h-full" ref={containerRef}>
+      <canvas ref={canvasRef} className="rounded-lg" />
       <div
         ref={tooltipRef}
-        className="absolute bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-50 pointer-events-none"
-        style={{ 
-          display: 'none',
-          maxWidth: '300px'
-        }}
+        className="absolute hidden bg-white border rounded-lg shadow-lg p-3 max-w-xs z-50 pointer-events-none"
+        style={{ display: 'none' }}
       />
-      
-      {words.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-          暂无数据
-        </div>
-      )}
     </div>
   );
 };
