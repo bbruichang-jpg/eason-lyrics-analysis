@@ -1,10 +1,11 @@
 import type { NextConfig } from 'next';
-import path from 'path';
 
 const nextConfig: NextConfig = {
-  // outputFileTracingRoot: path.resolve(__dirname, '../../'),
-  /* config options here */
-  allowedDevOrigins: ['*.dev.coze.site'],
+  // Cloudflare Pages 配置
+  experimental: {
+    // 启用服务端组件支持
+    serverComponentsExternalPackages: [],
+  },
   images: {
     remotePatterns: [
       {
@@ -13,6 +14,8 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    // Cloudflare Pages 图片优化配置
+    unoptimized: true,
   },
 };
 

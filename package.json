@@ -8,7 +8,9 @@
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint",
     "start": "bash ./scripts/start.sh",
-    "ts-check": "tsc -p tsconfig.json"
+    "ts-check": "tsc -p tsconfig.json",
+    "pages:build": "npx @cloudflare/next-on-pages",
+    "pages:deploy": "pnpm run build && pnpm run pages:build && wrangler pages deploy .vercel/output/static"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",
